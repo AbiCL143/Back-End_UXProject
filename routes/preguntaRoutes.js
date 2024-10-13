@@ -65,12 +65,15 @@ router.get('/', authMiddleware, async (req, res) => {
 
 // Crear una nueva pregunta 
 router.post('/nueva-pregunta', authMiddleware, async (req, res) => {
-    if (req.user.rol !== 1) {
+    if (req.user.rol !== 1 && req.user.rol !== 0) {
         return res.status(403).json({ message: 'No tienes permisos para crear preguntas.' });
     }
 
-    // Crear nueva pregunta
-    const pregunta = new Pregunta(req.body);
+    const pregunta = new Pregunta({
+        ...req.body,
+        id_usuario: req.user.id  
+    });
+
     try {
         const nuevaPregunta = await pregunta.save();
         res.status(201).json(nuevaPregunta);
@@ -78,6 +81,7 @@ router.post('/nueva-pregunta', authMiddleware, async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 });
+
 
 // Obtener una pregunta por ID
 router.get('/:id', authMiddleware, async (req, res) => {

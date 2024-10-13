@@ -6,10 +6,8 @@ const Pregunta = require('../models/Pregunta');
 const authMiddleware = require('../middleware/authMiddleware'); 
 
 // Obtener la rúbrica completa (acceso permitido a todos para la rúbrica 0, de lo contrario, solo propietario o admin)
-router.get('/completa/:id_rubrica', authMiddleware, async (req, res) => {
+router.get('/completa/:id_rubrica', async (req, res) => {
     const { id_rubrica } = req.params;
-    const idUsuario = req.user.id; // ID del usuario autenticado
-    const rolUsuario = req.user.rol; // Rol del usuario autenticado
 
     try {
         // Buscar la rúbrica
@@ -19,12 +17,44 @@ router.get('/completa/:id_rubrica', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'Rúbrica no encontrada' });
         }
 
-        // Permitir acceso a la rúbrica con ID 0 para todos
-        if (id_rubrica !== '0') {
-            // Verificar si el usuario es el propietario de la rúbrica o si es un administrador
-            if (rubrica.id_usuario !== idUsuario && rolUsuario !== 0) {
-                return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
-            }
+        // Permitir acceso a la rúbrica con ID 0 para todos (sin autenticación)
+        if (id_rubrica === '0') {
+            const categorias = rubrica.categorias;
+
+            // Obtener categorías desglosadas
+            const categoriasDesglosadas = await Promise.all(categorias.map(async (categoriaId) => {
+                const criterios = await Criterio.find({ id_categoria: categoriaId });
+                const criteriosDesglosados = await Promise.all(criterios.map(async (criterio) => {
+                    const preguntas = await Pregunta.find({ id_criterio: criterio.ID_criterio });
+                    return {
+                        ...criterio._doc,
+                        preguntas: preguntas
+                    };
+                }));
+
+                return {
+                    id_categoria: categoriaId,
+                    criterios: criteriosDesglosados
+                };
+            }));
+
+            return res.json({
+                ...rubrica._doc,
+                categorias: categoriasDesglosadas
+            });
+        }
+
+        // Si no es la rúbrica 0, requerir autenticación
+        const idUsuario = req.user?.id; // ID del usuario autenticado, si existe
+        const rolUsuario = req.user?.rol; // Rol del usuario autenticado, si existe
+
+        if (!idUsuario) {
+            return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
+        }
+
+        // Verificar si el usuario es el propietario de la rúbrica o si es un administrador
+        if (rubrica.id_usuario !== idUsuario && rolUsuario !== 0) {
+            return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
         }
 
         // Obtener las categorías relacionadas con la rúbrica
@@ -51,10 +81,12 @@ router.get('/completa/:id_rubrica', authMiddleware, async (req, res) => {
             ...rubrica._doc,
             categorias: categoriasDesglosadas
         });
+
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
+
 
 
 // Crear una nueva rúbrica (solo para usuarios autenticados)
