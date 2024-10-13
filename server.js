@@ -14,13 +14,13 @@ const puntajeRoutes = require('./routes/puntaje_criterioRoutes');
 
 require('dotenv').config(); // Cargar las variables de entorno
 
-
 // Configura tu aplicación
 const app = express();
 app.use(bodyParser.json());
 
 // Conexión a MongoDB
-const mongoURI = 'mongodb://localhost:27017/UXProject'; // Cambia esto según tu configuración
+const mongoURI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/UXProject?retryWrites=true&w=majority`;
+
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log('Conectado a MongoDB');
