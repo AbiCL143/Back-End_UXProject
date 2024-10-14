@@ -3,7 +3,7 @@ const { Schema } = mongoose; // Desestructurar Schema de mongoose
 const AutoIncrement = require('mongoose-sequence')(mongoose); // Importar mongoose-sequence
 
 const userSchema = new Schema({
-    //ID_usuario: { type: Number, required: true, unique: true }, // Definido como un número
+    ID_usuario: { type: Number, required: true, unique: true }, // Definido como un número
     nombre: { type: String, required: true },
     apellido_p: { type: String, required: true },
     apellido_m: { type: String, required: true },
