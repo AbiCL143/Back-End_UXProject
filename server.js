@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { initializeCollections } = require('./initializeCollections'); // Importar la inicialización de colecciones
@@ -16,6 +17,7 @@ require('dotenv').config(); // Cargar las variables de entorno
 
 // Configura tu aplicación
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
 // Conexión a MongoDB
@@ -41,7 +43,7 @@ app.use('/evaluaciones', evaluacionRouter);
 app.use('/puntajes', puntajeRoutes);
 
 // Iniciar el servidor
-const PORT = 3000;
+const PORT = 8000;
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });

@@ -6,7 +6,8 @@ const rubricaSchema = new Schema({
     //ID_rubrica: { type: Number, required: true, unique: true }, 
     nombre_rubrica: { type: String, required: true },
     id_usuario: { type: Number, ref: 'Usuario', required: true },
-    categorias: [{ type: Number, ref: 'Categoria' }]  
+    categorias: [{ type: Number, ref: 'Categoria' }],
+    criterios: [{ type: Number, ref: 'Criterios', require: false}]  
   });
 
   rubricaSchema.plugin(AutoIncrement, { inc_field: 'ID_rubrica' });
