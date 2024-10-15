@@ -163,6 +163,20 @@ router.delete('/eliminar/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Ruta para obtener preguntas por id_criterio
+router.get('/criterio/:id_criterio', async (req, res) => {
+    const { id_criterio } = req.params;
 
+    try {
+        const preguntas = await Pregunta.find({ id_criterio });
+        if (!preguntas.length) {
+            return res.status(404).json({ mensaje: 'No se encontraron preguntas para el criterio especificado' });
+        }
+        res.status(200).json(preguntas);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Error al obtener preguntas' });
+    }
+});
 
 module.exports = router;
