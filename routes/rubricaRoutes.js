@@ -6,7 +6,7 @@ const Pregunta = require('../models/Pregunta');
 const authMiddleware = require('../middleware/authMiddleware'); 
 
 // Obtener la rúbrica completa (acceso permitido a todos para la rúbrica 0, de lo contrario, solo propietario o admin)
-router.get('/completa/:id_rubrica', async (req, res) => {
+router.get('/completa/:id_rubrica', authMiddleware ,   async (req, res) => {
     const { id_rubrica } = req.params;
 
     try {
@@ -47,7 +47,7 @@ router.get('/completa/:id_rubrica', async (req, res) => {
         // Si no es la rúbrica 0, requerir autenticación
         const idUsuario = req.user?.id; // ID del usuario autenticado, si existe
         const rolUsuario = req.user?.rol; // Rol del usuario autenticado, si existe
-
+        console.log('idUsuario:', idUsuario);
         if (!idUsuario) {
             return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
         }
