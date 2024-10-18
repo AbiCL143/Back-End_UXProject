@@ -5,25 +5,30 @@ const Criterio = require('../models/Criterio');
 const Pregunta = require('../models/Pregunta');
 const authMiddleware = require('../middleware/authMiddleware'); 
 
-// Obtener la rúbrica completa (acceso permitido a todos para la rúbrica 0, de lo contrario, solo propietario o admin)
-router.get('/completa/:id_rubrica', authMiddleware ,   async (req, res) => {
+router.get('/completa/:id_rubrica', authMiddleware, async (req, res) => {
     const { id_rubrica } = req.params;
 
     try {
-        // Buscar la rúbrica
-        const rubrica = await Rubrica.findOne({ ID_rubrica: id_rubrica });
+        // Buscar la rúbrica por su ID
+        const rubrica = await Rubrica.findOne({ ID_rubrica: Number(id_rubrica) });
 
         if (!rubrica) {
             return res.status(404).json({ message: 'Rúbrica no encontrada' });
         }
 
-        // Permitir acceso a la rúbrica con ID 0 para todos (sin autenticación)
+        // Si es rúbrica 0 (pública), permitir acceso a todos
         if (id_rubrica === '0') {
             const categorias = rubrica.categorias;
+            const criteriosSeleccionados = rubrica.criterios; // Los criterios que seleccionaste
 
-            // Obtener categorías desglosadas
+            // Obtener categorías desglosadas con criterios seleccionados
             const categoriasDesglosadas = await Promise.all(categorias.map(async (categoriaId) => {
-                const criterios = await Criterio.find({ id_categoria: categoriaId });
+                // Buscar los criterios de esta categoría que están en los criterios seleccionados
+                const criterios = await Criterio.find({
+                    id_categoria: categoriaId,
+                    ID_criterio: { $in: criteriosSeleccionados }
+                });
+
                 const criteriosDesglosados = await Promise.all(criterios.map(async (criterio) => {
                     const preguntas = await Pregunta.find({ id_criterio: criterio.ID_criterio });
                     return {
@@ -52,17 +57,22 @@ router.get('/completa/:id_rubrica', authMiddleware ,   async (req, res) => {
             return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
         }
 
-        // Verificar si el usuario es el propietario de la rúbrica o si es un administrador
+        // Verificar si el usuario es el propietario o admin
         if (rubrica.id_usuario !== idUsuario && rolUsuario !== 0) {
             return res.status(403).json({ message: 'Acceso denegado. No tienes permiso para ver esta rúbrica.' });
         }
 
         // Obtener las categorías relacionadas con la rúbrica
         const categorias = rubrica.categorias;
+        const criteriosSeleccionados = rubrica.criterios; // Los criterios que seleccionaste
 
-        // Obtener categorías desglosadas
+        // Obtener categorías desglosadas con criterios seleccionados
         const categoriasDesglosadas = await Promise.all(categorias.map(async (categoriaId) => {
-            const criterios = await Criterio.find({ id_categoria: categoriaId });
+            const criterios = await Criterio.find({
+                id_categoria: categoriaId,
+                ID_criterio: { $in: criteriosSeleccionados }
+            });
+
             const criteriosDesglosados = await Promise.all(criterios.map(async (criterio) => {
                 const preguntas = await Pregunta.find({ id_criterio: criterio.ID_criterio });
                 return {
@@ -86,6 +96,8 @@ router.get('/completa/:id_rubrica', authMiddleware ,   async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+
 
 
 
